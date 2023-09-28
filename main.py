@@ -30,3 +30,14 @@ async def upload_file(file: UploadFile = File(...)):
 async def get_folder_contents():
     contents = os.listdir(FOLDER_PATH)
     return {"folder_contents": contents}
+
+
+@app.get("/api/video/recent")
+async def get_recent_content():
+    contents = os.listdir(FOLDER_PATH)
+
+    # Sort based on modification time
+    contents_sorted = sorted(contents, key=lambda x: os.path.getmtime(
+        os.path.join(FOLDER_PATH, x)), reverse=True)
+
+    return {"recent_file": contents_sorted[0]}
