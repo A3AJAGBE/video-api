@@ -15,6 +15,8 @@ FOLDER_NAME = "apiVideos"
 FOLDER_PATH = DESKTOP_PATH / FOLDER_NAME
 FOLDER_PATH.mkdir(parents=True, exist_ok=True)
 
+NO_CONTENT_RESPONSE = "No saved record YET."
+
 
 @app.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
@@ -29,15 +31,23 @@ async def upload_file(file: UploadFile = File(...)):
 @app.get("/api/videos")
 async def get_folder_contents():
     contents = os.listdir(FOLDER_PATH)
-    return {"folder_contents": contents}
+
+    if len(contents) == 0:
+        return {"message": NO_CONTENT_RESPONSE}
+    else:
+        return {"folder_contents": contents}
 
 
 @app.get("/api/video/recent")
 async def get_recent_content():
-    contents = os.listdir(FOLDER_PATH)
+    try:
+        contents = os.listdir(FOLDER_PATH)
 
-    # Sort based on modification time
-    contents_sorted = sorted(contents, key=lambda x: os.path.getmtime(
-        os.path.join(FOLDER_PATH, x)), reverse=True)
+        # Sort based on modification time
+        contents_sorted = sorted(contents, key=lambda x: os.path.getmtime(
+            os.path.join(FOLDER_PATH, x)), reverse=True)
 
-    return {"recent_file": contents_sorted[0]}
+        return {"recent_file": contents_sorted[0]}
+
+    except IndexError:
+        return {"message": NO_CONTENT_RESPONSE}
