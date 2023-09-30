@@ -49,4 +49,4 @@ watchfiles==0.20.0
 websockets==11.0.3
 whisper-transcribe==0.1.1
 yarl==1.9.2
-yt-dlp==2023.9.24
+
