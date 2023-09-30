@@ -19,13 +19,16 @@ NO_CONTENT_RESPONSE = "No saved record YET."
 
 
 @app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_screen_record(file: UploadFile = File(...)):
     file_path = FOLDER_PATH / file.filename
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    try:
+        with open(file_path, 'wb') as f:
+            shutil.copyfileobj(file.file, f)
+    except Exception:
+        return {"message": "There was an error uploading the screen recording."}
 
-    return {"message": "File saved successfully to apiVideos folder on your desktop"}
+    return {"message": f"Successfully uploaded {file.filename}"}
 
 
 @app.get("/api/videos")
