@@ -4,11 +4,12 @@ import shutil
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-
+from fastapi.openapi.utils import get_openapi
 
 load_dotenv()
 
-app = FastAPI()
+app = FastAPI(openapi_url="/api/v1/openapi.json",
+              docs_url="/api/livedoc", redoc_url=None)
 
 # Get the user's desktop directory
 DESKTOP_PATH = Path.home() / "Desktop"
@@ -23,7 +24,7 @@ FOLDER_PATH.mkdir(parents=True, exist_ok=True)
 NO_CONTENT_RESPONSE = "No saved record YET."
 
 
-@app.post("/api/upload")
+@app.post("/api/upload", tags=["Screen Recording"])
 async def upload_screen_record(file: UploadFile = File(...)):
     file_path = FOLDER_PATH / file.filename
 
@@ -36,7 +37,7 @@ async def upload_screen_record(file: UploadFile = File(...)):
     return {"message": f"Successfully uploaded {file.filename}"}
 
 
-@app.get("/api/videos")
+@app.get("/api/videos", tags=["Screen Recording"])
 async def get_folder_contents():
     contents = os.listdir(FOLDER_PATH)
 
@@ -46,7 +47,7 @@ async def get_folder_contents():
         return {"folder_contents": contents}
 
 
-@app.get("/api/video/recent")
+@app.get("/api/video/recent", tags=["Screen Recording"])
 async def get_recent_content():
     try:
         contents = os.listdir(FOLDER_PATH)
@@ -63,3 +64,22 @@ async def get_recent_content():
 
     except IndexError:
         return {"message": NO_CONTENT_RESPONSE}
+
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Screen Record API",
+        version="1.0.0",
+        summary="This is a RESTful API with partial CRUD functionality",
+        routes=app.routes,
+    )
+    openapi_schema["info"]["x-logo"] = {
+        "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
+    }
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
