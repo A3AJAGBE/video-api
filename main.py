@@ -1,7 +1,12 @@
+from whisper_transcribe import Transcriber
 from fastapi import FastAPI, File, UploadFile
 import shutil
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -9,7 +14,7 @@ app = FastAPI()
 DESKTOP_PATH = Path.home() / "Desktop"
 
 # The folder name
-FOLDER_NAME = "apiVideos"
+FOLDER_NAME = "Records"
 
 # Create the folder if it doesn't exist
 FOLDER_PATH = DESKTOP_PATH / FOLDER_NAME
@@ -50,7 +55,11 @@ async def get_recent_content():
         contents_sorted = sorted(contents, key=lambda x: os.path.getmtime(
             os.path.join(FOLDER_PATH, x)), reverse=True)
 
-        return {"recent_file": contents_sorted[0]}
+        record_path = FOLDER_PATH/contents_sorted[0]
+
+        with Transcriber(api_key=os.getenv("ScreenAPI")) as t:
+            transcription = t.transcribe(record_path)
+        return {"recent_file": contents_sorted[0], "transcription": transcription}
 
     except IndexError:
         return {"message": NO_CONTENT_RESPONSE}
