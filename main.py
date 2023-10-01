@@ -56,7 +56,7 @@ async def get_recent_content():
         contents_sorted = sorted(contents, key=lambda x: os.path.getmtime(
             os.path.join(FOLDER_PATH, x)), reverse=True)
 
-        record_path = FOLDER_PATH/contents_sorted[0]
+        record_path = str(FOLDER_PATH/contents_sorted[0])
 
         with Transcriber(api_key=os.getenv("ScreenAPI")) as t:
             transcription = t.transcribe(record_path)
