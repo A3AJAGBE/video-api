@@ -1,8 +1,6 @@
 from fastapi.middleware.cors import CORSMiddleware
 from whisper_transcribe import Transcriber
 from fastapi import FastAPI, File, UploadFile
-import shutil
-from pathlib import Path
 import os
 from dotenv import load_dotenv
 from fastapi.openapi.utils import get_openapi
@@ -24,19 +22,27 @@ app.add_middleware(
 
 recording_info = []
 
-# Get the user's desktop directory
-DESKTOP_PATH = Path.home() / "Desktop"
 
+# Get the path to the user's desktop directory
+DESKTOP_PATH = os.path.join(os.path.expanduser("~"), "Desktop")
+
+# Create the new folder on the desktop
 BLOB_FOLDER_NAME = "BlobRecords"
-BLOB_FOLDER_PATH = DESKTOP_PATH / BLOB_FOLDER_NAME
-BLOB_FOLDER_PATH.mkdir(parents=True, exist_ok=True)
+BLOB_FOLDER_PATH = os.path.join(DESKTOP_PATH, BLOB_FOLDER_NAME)
+
+
+try:
+    os.makedirs(BLOB_FOLDER_PATH)
+except FileExistsError:
+    pass
+
 
 NO_CONTENT_RESPONSE = "No saved recording YET."
 
 
 @app.post("/api/upload", tags=["Screen Recording"])
 async def upload_recording(file: UploadFile = File(...)):
-    blob_file_path = BLOB_FOLDER_PATH / file.filename
+    blob_file_path = os.path.join(BLOB_FOLDER_PATH, file.filename)
 
     try:
         with open(blob_file_path, "wb") as f:
@@ -55,7 +61,7 @@ async def get_recordings():
         return {"message": NO_CONTENT_RESPONSE}
     else:
         for c in contents:
-            record_path = str(BLOB_FOLDER_PATH/c)
+            record_path = os.path.join(BLOB_FOLDER_PATH, c)
             recording_info.append([c, record_path])
         return {"folder_contents": recording_info}
 
@@ -69,7 +75,7 @@ async def get_recent_recording():
         contents_sorted = sorted(contents, key=lambda x: os.path.getmtime(
             os.path.join(BLOB_FOLDER_PATH, x)), reverse=True)
 
-        record_path = str(BLOB_FOLDER_PATH/contents_sorted[0])
+        record_path = os.path.join(BLOB_FOLDER_PATH, contents_sorted[0])
 
         with Transcriber(api_key=os.getenv("ScreenAPI")) as t:
             transcription = t.transcribe(record_path)
