@@ -1,3 +1,4 @@
+from fastapi.middleware.cors import CORSMiddleware
 from whisper_transcribe import Transcriber
 from fastapi import FastAPI, File, UploadFile
 import shutil
@@ -10,6 +11,16 @@ load_dotenv()
 
 app = FastAPI(openapi_url="/api/v1/openapi.json",
               docs_url="/api/livedoc", redoc_url=None)
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Get the user's desktop directory
 DESKTOP_PATH = Path.home() / "Desktop"
