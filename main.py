@@ -25,32 +25,29 @@ app.add_middleware(
 # Get the user's desktop directory
 DESKTOP_PATH = Path.home() / "Desktop"
 
-# The folder name
-FOLDER_NAME = "Records"
+BLOB_FOLDER_NAME = "BlobRecords"
+BLOB_FOLDER_PATH = DESKTOP_PATH / BLOB_FOLDER_NAME
+BLOB_FOLDER_PATH.mkdir(parents=True, exist_ok=True)
 
-# Create the folder if it doesn't exist
-FOLDER_PATH = DESKTOP_PATH / FOLDER_NAME
-FOLDER_PATH.mkdir(parents=True, exist_ok=True)
-
-NO_CONTENT_RESPONSE = "No saved record YET."
+NO_CONTENT_RESPONSE = "No saved recording YET."
 
 
 @app.post("/api/upload", tags=["Screen Recording"])
-async def upload_screen_record(file: UploadFile = File(...)):
-    file_path = FOLDER_PATH / file.filename
+async def upload_recording(file: UploadFile = File(...)):
+    blob_file_path = BLOB_FOLDER_PATH / file.filename
 
     try:
-        with open(file_path, 'wb') as f:
-            shutil.copyfileobj(file.file, f)
+        with open(blob_file_path, "wb") as f:
+            f.write(await file.read())
     except Exception:
         return {"message": "There was an error uploading the screen recording."}
 
     return {"message": f"Successfully uploaded {file.filename}"}
 
 
-@app.get("/api/videos", tags=["Screen Recording"])
-async def get_folder_contents():
-    contents = os.listdir(FOLDER_PATH)
+@app.get("/api/recordings", tags=["Screen Recording"])
+async def get_recordings():
+    contents = os.listdir(BLOB_FOLDER_PATH)
 
     if len(contents) == 0:
         return {"message": NO_CONTENT_RESPONSE}
@@ -58,16 +55,16 @@ async def get_folder_contents():
         return {"folder_contents": contents}
 
 
-@app.get("/api/video/recent", tags=["Screen Recording"])
-async def get_recent_content():
+@app.get("/api/recording/recent", tags=["Screen Recording"])
+async def get_recent_recording():
     try:
-        contents = os.listdir(FOLDER_PATH)
+        contents = os.listdir(BLOB_FOLDER_PATH)
 
         # Sort based on modification time
         contents_sorted = sorted(contents, key=lambda x: os.path.getmtime(
-            os.path.join(FOLDER_PATH, x)), reverse=True)
+            os.path.join(BLOB_FOLDER_PATH, x)), reverse=True)
 
-        record_path = str(FOLDER_PATH/contents_sorted[0])
+        record_path = str(BLOB_FOLDER_PATH/contents_sorted[0])
 
         with Transcriber(api_key=os.getenv("ScreenAPI")) as t:
             transcription = t.transcribe(record_path)
