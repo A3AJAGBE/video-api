@@ -22,6 +22,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+recording_info = []
+
 # Get the user's desktop directory
 DESKTOP_PATH = Path.home() / "Desktop"
 
@@ -52,7 +54,10 @@ async def get_recordings():
     if len(contents) == 0:
         return {"message": NO_CONTENT_RESPONSE}
     else:
-        return {"folder_contents": contents}
+        for c in contents:
+            record_path = str(BLOB_FOLDER_PATH/c)
+            recording_info.append([c, record_path])
+        return {"folder_contents": recording_info}
 
 
 @app.get("/api/recording/recent", tags=["Screen Recording"])
@@ -68,7 +73,7 @@ async def get_recent_recording():
 
         with Transcriber(api_key=os.getenv("ScreenAPI")) as t:
             transcription = t.transcribe(record_path)
-        return {"recent_file": contents_sorted[0], "transcription": transcription}
+        return {"recent_file": contents_sorted[0], "src": record_path, "transcription": transcription}
 
     except IndexError:
         return {"message": NO_CONTENT_RESPONSE}
