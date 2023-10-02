@@ -20,7 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-recording_info = []
+recording_path = []
 
 
 # Get the path to the user's desktop directory
@@ -50,20 +50,16 @@ async def upload_recording(file: UploadFile = File(...)):
     except Exception:
         return {"message": "There was an error uploading the screen recording."}
 
+    recording_path.append(blob_file_path)
     return {"message": f"Successfully uploaded {file.filename}"}
 
 
 @app.get("/api/recordings", tags=["Screen Recording"])
 async def get_recordings():
-    contents = os.listdir(BLOB_FOLDER_PATH)
-
     if len(contents) == 0:
         return {"message": NO_CONTENT_RESPONSE}
-    else:
-        for c in contents:
-            record_path = os.path.join(BLOB_FOLDER_PATH, c)
-            recording_info.append([c, record_path])
-    return {"recordings": recording_info}
+
+    return {"recordings": recording_path}
 
 
 @app.get("/api/recording/recent", tags=["Screen Recording"])
