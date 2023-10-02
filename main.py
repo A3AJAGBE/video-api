@@ -63,7 +63,7 @@ async def get_recordings():
         for c in contents:
             record_path = os.path.join(BLOB_FOLDER_PATH, c)
             recording_info.append([c, record_path])
-        return {"folder_contents": recording_info}
+    return {"recordings": recording_info}
 
 
 @app.get("/api/recording/recent", tags=["Screen Recording"])
@@ -79,7 +79,7 @@ async def get_recent_recording():
 
         with Transcriber(api_key=os.getenv("ScreenAPI")) as t:
             transcription = t.transcribe(record_path)
-        return {"recent_file": contents_sorted[0], "src": record_path, "transcription": transcription}
+        return {"file_name": contents_sorted[0], "src": record_path, "transcription": transcription}
 
     except IndexError:
         return {"message": NO_CONTENT_RESPONSE}
