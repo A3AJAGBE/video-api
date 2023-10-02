@@ -56,6 +56,8 @@ async def upload_recording(file: UploadFile = File(...)):
 
 @app.get("/api/recordings", tags=["Screen Recording"])
 async def get_recordings():
+    contents = os.listdir(BLOB_FOLDER_PATH)
+
     if len(contents) == 0:
         return {"message": NO_CONTENT_RESPONSE}
 
